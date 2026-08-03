@@ -1,59 +1,71 @@
 import asyncio
-import requests
 from aiogram import Bot
 
-# === BUYERGA O'ZINGIZNING MA'LUMOTLARINGIZNI YOZING ===
+# ==================== SOZLAMALAR ====================
 BOT_TOKEN = "8691623183:AAGkDd6HFf3lLDuHfioqPmPKI3sHdca7wh0"
-CHANNEL_ID = "@futbol_ultra"
-FOOTBALL_API_KEY = "ab942a3e909f4e54ad59761aa0b9afa1"
+CHANNEL_ID = "@futbol_ultra"  # Masalan: @footbol_news
+CHANNEL_LINK = "https://t.me/futbol_ultra"  # Kanalingizning to'liq havolasi
+# ====================================================
 
 bot = Bot(token=BOT_TOKEN)
 
-def get_todays_matches():
-    url = "https://api.football-data.org/v4/matches"
-    headers = {"X-Auth-Token": FOOTBALL_API_KEY}
-    
-    try:
-        response = requests.get(url, headers=headers)
-        data = response.json()
-        matches = data.get('matches', [])
+# 1. O'YINLARNI TEKSHIRISH VA YUBORISH
+async def send_daily_matches():
+    # Saytdan/API'dan olinadigan o'yinlar ro'yxati (namuna)
+    matches = [
+        # "⚽️ Real Madrid vs Barcelona - 23:00",
+        # "⚽️ Arsenal vs Chelsea - 20:30"
+    ]
+    source_site = "Flashscore.com"  # Ma'lumot olingan manba
 
-        if not matches:
-            return "⚽️ Bugun rejalashtirilgan o'yinlar topilmadi."
+    # FAQAT O'YIN BOR KUNLARI YUBORILADI
+    if matches:
+        text = "🔥 BUGUNGI SHOU-OʻYINLAR ROʻYXATI 🔥\n\n"
+        text += "\n".join(matches)
+        text += f"\n\nℹ️ *Manba: {source_site}*"
+        text += f"\n\n📲 Bizga qoʻshiling: [{CHANNEL_ID}]({CHANNEL_LINK})"
 
-        text = "📅 <b>BUGUNGI O'YINLAR JADVALI</b>\n\n"
+        # Futbol mavzusidagi umumiy rasm
+        match_image = "https://images.unsplash.com/photo-1508098682722-e99c43a406b2?q=80&w=1000"
 
-        for match in matches[:10]:
-            home = match['homeTeam']['name']
-            away = match['awayTeam']['name']
-            utc_time = match['utcDate'][11:16]
-            league = match['competition']['name']
-            
-            text += f"🏆 <b>{league}</b>\n"
-            text += f"⚔️ <b>{home}</b> vs <b>{away}</b>\n"
-            text += f"⏰ Vaqti: {utc_time} (UTC)\n"
-            text += "───────────────\n"
-
-        text += "\n🔥 <i>Sevimli jamoangizga omad!</i>"
-        return text
-
-    except Exception as e:
-        print(f"Xatolik: {e}")
-        return None
-
-async def main():
-    print("Bot ishga tushdi va xabar tayyorlanmoqda...")
-    post_text = get_todays_matches()
-
-    if post_text:
-        await bot.send_message(
-            chat_id=CHANNEL_ID, 
-            text=post_text, 
-            parse_mode="HTML"
+        await bot.send_photo(
+            chat_id=CHANNEL_ID,
+            photo=match_image,
+            caption=text,
+            parse_mode="Markdown"
         )
-        print("✅ Post Telegram kanalga muvaffaqiyatli joylandi!")
-    
-    await bot.session.close()
+        print("O'yinlar haqida post tashlandi!")
+    else:
+        print("Bugun o'yinlar yo'q, kanalga hech narsa yuborilmadi.")
+
+# 2. TRANSFER XABARLARINI YUBORISH
+async def send_transfer_news(player_name, old_club, new_club, fee, image_url, source):
+    """
+    Transferlar haqida post yuboruvchi maxsus funksiya
+    """
+    text = f"🚨 RASMAN / TRANSFER! 🚨\n\n"
+    text += f"👤 Futbolchi: {player_name}\n"
+    text += f"🔄 Oʻtish: {old_club} ➡️ {new_club}\n"
+    text += f"💰 Transfer summasi: {fee}\n\n"
+    text += f"ℹ️ *Manba: {source}*\n\n"
+    text += f"📲 Kanalimizga obuna boʻling: [{CHANNEL_ID}]({CHANNEL_LINK})"
+
+    await bot.send_photo(
+        chat_id=CHANNEL_ID,
+        photo=image_url,  # Bu yerga futbolchining eski va yangi formasi aks etgan rasm havolasi qo'yiladi
+        caption=text,
+        parse_mode="Markdown"
+    )
+    print(f"{player_name} transferi haqida post yuborildi!")
+
+# BOTNING ASOSIY ISHCHILAR TAYMERI
+async def main():
+    while True:
+        # Kunlik o'yinlarni tekshiradi
+        await send_daily_matches()
+        
+        # Har 12 soatda bir marta ishlaydi
+        await asyncio.sleep(43200)
 
 if __name__ == "__main__":
     asyncio.run(main())
