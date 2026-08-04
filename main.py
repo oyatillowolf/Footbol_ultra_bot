@@ -51,9 +51,7 @@ def generate_ai_caption(prompt_text):
         response = ai_client.chat.completions.create(
             model="gpt-3.5-turbo",
             messages=[
-                {"role": "system", "content": "Siz futbol bo'yicha ekspert va 'Futbol Ultra' kanalining 
-adminisiz. Matnlarni o'zbek tilida chiroyli, jozibali, emojilar va heshteglar bilan bezatib berishingiz 
-kerak."},
+                {"role": "system", "content": "Siz futbol bo'yicha ekspert va 'Futbol Ultra' kanalining adminisiz. Matnlarni o'zbek tilida chiroyli, jozibali, emojilar va heshteglar bilan bezatib berishingiz kerak."},
                 {"role": "user", "content": prompt_text}
             ],
             max_tokens=500
